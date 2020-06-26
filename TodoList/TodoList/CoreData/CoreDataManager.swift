@@ -17,11 +17,12 @@ class CoreDataManager {
   
   let modelName: String = "TodoList"
   
-  func getUsers(ascending: Bool = false) -> [TodoList] {
+  
+  func fetchTodoList(ascending: Bool = false) -> [TodoList] {
     var models: [TodoList] = [TodoList]()
     
     if let context = context {
-      let idSort: NSSortDescriptor = NSSortDescriptor(key: "index", ascending: ascending)
+      let idSort: NSSortDescriptor = NSSortDescriptor(key: "createTime", ascending: ascending)
       let fetchRequest: NSFetchRequest<NSManagedObject>
         = NSFetchRequest<NSManagedObject>(entityName: modelName)
       fetchRequest.sortDescriptors = [idSort]
@@ -37,17 +38,16 @@ class CoreDataManager {
     return models
   }
   
-  func saveUser(index: Int, title: String, kinds:String, alramTime:String, complete:Bool, onSuccess: @escaping ((Bool) -> Void)) {
+  func saveTodoItem(createTime: Int, title: String, kinds:String, onSuccess: @escaping ((Bool) -> Void)) {
     if let context = context,
       let entity: NSEntityDescription
       = NSEntityDescription.entity(forEntityName: modelName, in: context) {
       
       if let todoList: TodoList = NSManagedObject(entity: entity, insertInto: context) as? TodoList {
-        todoList.index = index
+        todoList.createTime = createTime
         todoList.title = title
         todoList.kinds = kinds
-        todoList.alarmTime = alramTime
-        todoList.complete = complete
+        todoList.complete = false
         
         contextSave { success in
           onSuccess(success)
@@ -67,8 +67,8 @@ class CoreDataManager {
     }
   }
   
-  func deleteUser(index: Int, onSuccess: @escaping ((Bool) -> Void)) {
-    let fetchRequest: NSFetchRequest<NSFetchRequestResult> = filteredRequest(index: index)
+  func deleteTodoList(createTime: Int, onSuccess: @escaping ((Bool) -> Void)) {
+    let fetchRequest: NSFetchRequest<NSFetchRequestResult> = filteredRequest(createTime: createTime)
     
     do {
       if let results: [TodoList] = try context?.fetch(fetchRequest) as? [TodoList] {
@@ -90,7 +90,7 @@ class CoreDataManager {
     var todoList = [TodoList]()
     
     if let context = context {
-      let index: NSSortDescriptor = NSSortDescriptor(key: "index", ascending: true)
+      let index: NSSortDescriptor = NSSortDescriptor(key: "createTime", ascending: true)
       
       let fetchRequest: NSFetchRequest<NSFetchRequestResult>
         = NSFetchRequest<NSFetchRequestResult>(entityName: modelName)
@@ -111,14 +111,60 @@ class CoreDataManager {
     return todoList
   }
   
-  func changeSaveData(onSuccess: @escaping ((Bool) -> Void)) {
-    if let context = context,
-      let entity: NSEntityDescription
-      = NSEntityDescription.entity(forEntityName: modelName, in: context) {
-      contextSave { success in
-        onSuccess(success)
+  func changetodoItemData(createTime: Int, title:String? = nil ,onSuccess: @escaping ((Bool) -> Void)) {
+    var todoList = [TodoList]()
+    
+    if let context = context {
+      let sortOprion: NSSortDescriptor = NSSortDescriptor(key: "createTime", ascending: true)
+      let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: modelName)
+      
+      fetchRequest.predicate = NSPredicate(format: "createTime = %@", NSNumber(value: createTime))
+      fetchRequest.sortDescriptors = [sortOprion]
+      
+      do {
+        if let fetchResult: [TodoList] = try context.fetch(fetchRequest) as? [TodoList] {
+          todoList = fetchResult
+        }
+      }catch let error as NSError {
+        print("Cound not Fetch todoItem from Database : \(error), \(error.userInfo)")
+      }
+      
+      if let todoItem:TodoList = todoList[0] {
+        todoItem.createTime = createTime
+        if let title = title {
+            todoItem.title = title
+        }
       }
     }
+    contextSave { success in
+      onSuccess(success)
+    }
+  }
+  
+  // ThirdVC 에서 컬렉션 뷰의 아이탬의 위치를 변경할때 처리하는 함수
+  func changeValueMovedItems(todoList:[TodoList] ,sourceIndexPath: IndexPath, destinationIndexPath: IndexPath) {
+    // 디비 데이터 삭제를 위한 임시값 생성
+    
+    let sourceCreateTime = todoList[sourceIndexPath.item].createTime
+    let destCreateTime = todoList[destinationIndexPath.item].createTime
+    
+    var destIndex:Int = 0
+    var sourceIndex:Int = 0
+    for index in 0..<originDataArray.count {
+      if originDataArray[index].createTime == destCreateTime {
+        destIndex = index
+      } else if originDataArray[index].createTime == sourceCreateTime {
+        sourceIndex = index
+      }
+    }
+    // 실제 디비 변경
+    originDataArray[destIndex].createTime = sourceCreateTime
+    originDataArray[sourceIndex].createTime = destCreateTime
+    
+    // 변경 사항 저장
+    CoreDataManager.shared.savedAllTodoList {  (onSuccess) in
+      onSuccess ? print("Save All Data Success") : print("Fail to Save All Data in ThirdVC") }
+    
   }
 }
 
@@ -135,11 +181,13 @@ class CoreDataManager {
 //  }
 
 
+
+
 extension CoreDataManager {
-  fileprivate func filteredRequest(index: Int) -> NSFetchRequest<NSFetchRequestResult> {
+  fileprivate func filteredRequest(createTime: Int) -> NSFetchRequest<NSFetchRequestResult> {
     let fetchRequest: NSFetchRequest<NSFetchRequestResult>
       = NSFetchRequest<NSFetchRequestResult>(entityName: modelName)
-    fetchRequest.predicate = NSPredicate(format: " index = %@", NSNumber(value: index))
+    fetchRequest.predicate = NSPredicate(format: " createTime = %@", NSNumber(value: createTime))
     return fetchRequest
   }
   

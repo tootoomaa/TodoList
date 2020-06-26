@@ -14,10 +14,8 @@ class FirstCell: UITableViewCell {
   var todoItem: TodoList? {
     didSet {
       guard let todoTitleName = todoItem?.title,
-        let setTime = todoItem?.alarmTime,
         let complete = todoItem?.complete else { return }
       
-      timeLabel.text = setTime
       checkButton.isSelected = complete
       
       let attributeString: NSMutableAttributedString =  NSMutableAttributedString(string: todoTitleName)
@@ -29,6 +27,7 @@ class FirstCell: UITableViewCell {
       
     }
   }
+  
   
   lazy var checkButton: UIButton = {
     let bt = UIButton()
@@ -49,11 +48,6 @@ class FirstCell: UITableViewCell {
     return label
   }()
   
-  let timeLabel: UILabel = {
-    let label = UILabel()
-    label.text = "AM 6:00"
-    return label
-  }()
   
   var delegate: FirstCellDelegate?
   
@@ -64,11 +58,10 @@ class FirstCell: UITableViewCell {
     
     addSubview(checkButton)
     addSubview(todoTitle)
-    addSubview(timeLabel)
     
     checkButton.translatesAutoresizingMaskIntoConstraints = false
     todoTitle.translatesAutoresizingMaskIntoConstraints = false
-    timeLabel.translatesAutoresizingMaskIntoConstraints = false
+
     
     NSLayoutConstraint.activate([
       checkButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
@@ -76,10 +69,6 @@ class FirstCell: UITableViewCell {
       
       todoTitle.leadingAnchor.constraint(equalTo: checkButton.trailingAnchor, constant: 8),
       todoTitle.centerYAnchor.constraint(equalTo: centerYAnchor),
-      
-      
-      timeLabel.trailingAnchor.constraint(equalTo: trailingAnchor,constant: -10),
-      timeLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
       
     ])
   }

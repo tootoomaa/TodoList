@@ -24,6 +24,7 @@
 		C7B078F524A19A1F00A7FB26 /* FirstCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B078F424A19A1F00A7FB26 /* FirstCell.swift */; };
 		C7B078F724A19A5200A7FB26 /* SecondVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B078F624A19A5200A7FB26 /* SecondVC.swift */; };
 		C7C96F4C24A48ED70044B2B7 /* AlramSettingVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C96F4B24A48ED70044B2B7 /* AlramSettingVC.swift */; };
+		C7C96F4E24A501D10044B2B7 /* SupportData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C96F4D24A501D10044B2B7 /* SupportData.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +49,7 @@
 		C7B078F424A19A1F00A7FB26 /* FirstCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstCell.swift; sourceTree = "<group>"; };
 		C7B078F624A19A5200A7FB26 /* SecondVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondVC.swift; sourceTree = "<group>"; };
 		C7C96F4B24A48ED70044B2B7 /* AlramSettingVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlramSettingVC.swift; sourceTree = "<group>"; };
+		C7C96F4D24A501D10044B2B7 /* SupportData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +121,7 @@
 				C77C297B24A19C4C00703608 /* TodoList+CoreDataProperties.swift */,
 				C77C297724A19BE600703608 /* TodoList.xcdatamodeld */,
 				C77C297E24A19D0900703608 /* CoreDataManager.swift */,
+				C7C96F4D24A501D10044B2B7 /* SupportData.swift */,
 			);
 			path = CoreData;
 			sourceTree = "<group>";
@@ -277,6 +280,7 @@
 				C7C96F4C24A48ED70044B2B7 /* AlramSettingVC.swift in Sources */,
 				C74A6A0B24A2EF420066C7AA /* ThirdCell.swift in Sources */,
 				C77C297D24A19C4C00703608 /* TodoList+CoreDataProperties.swift in Sources */,
+				C7C96F4E24A501D10044B2B7 /* SupportData.swift in Sources */,
 				C77C297C24A19C4C00703608 /* TodoList+CoreDataClass.swift in Sources */,
 				C7B078F724A19A5200A7FB26 /* SecondVC.swift in Sources */,
 				C7B078F524A19A1F00A7FB26 /* FirstCell.swift in Sources */,

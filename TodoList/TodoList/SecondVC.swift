@@ -73,15 +73,13 @@ class SecondVC: UIViewController {
     view.backgroundColor = .systemBackground
   
     configureAutolayout()
-    
-     
   }
   
   override func viewWillAppear(_ animated: Bool) {
+    navigationController?.navigationBar.isHidden = true
+    navigationController?.navigationBar.barTintColor = .systemBackground
     tabBarController?.tabBar.isHidden = false
   }
-  
-
   
   @objc func tabButtonAction(_ sender:UIButton) {
     let thirdVC = ThirdVC()

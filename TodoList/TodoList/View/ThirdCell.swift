@@ -13,10 +13,8 @@ class ThirdCell: UICollectionViewCell {
   var todoItem: TodoList? {
     didSet {
       guard let todoTitleName = todoItem?.title,
-        let setTiem = todoItem?.alarmTime,
         let complete = todoItem?.complete else { return }
       
-      timeLabel.text = setTiem
       todoTitle.text = todoTitleName
       
     }
@@ -25,12 +23,6 @@ class ThirdCell: UICollectionViewCell {
   let todoTitle: UILabel = {
     let label = UILabel()
     label.text = "test Todo list Name"
-    return label
-  }()
-  
-  let timeLabel: UILabel = {
-    let label = UILabel()
-    label.text = "AM 6:00"
     return label
   }()
   
@@ -46,19 +38,14 @@ class ThirdCell: UICollectionViewCell {
     super.init(frame: frame)
     
     addSubview(todoTitle)
-    addSubview(timeLabel)
     addSubview(moveKeyImage)
     
     todoTitle.translatesAutoresizingMaskIntoConstraints = false
-    timeLabel.translatesAutoresizingMaskIntoConstraints = false
     moveKeyImage.translatesAutoresizingMaskIntoConstraints = false
     
     NSLayoutConstraint.activate([
       todoTitle.leadingAnchor.constraint(equalTo: leadingAnchor, constant: padding),
       todoTitle.centerYAnchor.constraint(equalTo: centerYAnchor),
-      
-      timeLabel.trailingAnchor.constraint(equalTo: moveKeyImage.leadingAnchor, constant: -padding),
-      timeLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
       
       moveKeyImage.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -padding),
       moveKeyImage.centerYAnchor.constraint(equalTo: centerYAnchor)

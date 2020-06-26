@@ -17,10 +17,9 @@ extension TodoList {
         return NSFetchRequest<TodoList>(entityName: "TodoList")
     }
 
-    @NSManaged public var index: Int
+    @NSManaged public var createTime:Int
     @NSManaged public var title: String?
     @NSManaged public var kinds: String?
-    @NSManaged public var alarmTime: String?
     @NSManaged public var complete: Bool
 
 }

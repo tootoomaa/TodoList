@@ -53,6 +53,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     return true
   }
+  
+  func applicationWillTerminate(_ application: UIApplication) {
+    CoreDataManager.shared.savedAllTodoList { (onSuccess) in
+      onSuccess ? print("Save Success") : print("Save fail in firstVC")
+    }
+  }
 
 }
 

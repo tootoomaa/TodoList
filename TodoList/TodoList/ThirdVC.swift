@@ -13,14 +13,15 @@ class ThirdVC: UIViewController {
   //MARK: - Passed Properties
   var viewTitle: String? {
     didSet {
+      guard let viewTitle = viewTitle else { return }
       title = viewTitle
     }
   }
   
   //MARK: - Properties
   var padding:CGFloat = 10
-  var mainColor = ["아침":#colorLiteral(red: 0.9568627477, green: 0.6588235497, blue: 0.5450980663, alpha: 1),"점심":#colorLiteral(red: 0.6684702039, green: 0.9410213828, blue: 0.9152187705, alpha: 1),"저녁":#colorLiteral(red: 0.6370797157, green: 0.8685694337, blue: 0.5887434483, alpha: 1)]
-  
+  var deleteIndexPathArray = [IndexPath]()
+  var deleteTodoItemArray = [TodoList]()
   var todoList = [TodoList]()
   
   let textField: UITextField = {
@@ -43,14 +44,13 @@ class ThirdVC: UIViewController {
     return bt
   }()
   
+  //MARK: - ContainerView
   lazy var containerView: UIView = {
     let containerView = UIView(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: 70))
     
     containerView.layer.cornerRadius = 10
     containerView.addSubview(textField)
     containerView.addSubview(addButton)
-    
-    
     
     addButton.translatesAutoresizingMaskIntoConstraints = false
     textField.translatesAutoresizingMaskIntoConstraints = false
@@ -75,7 +75,7 @@ class ThirdVC: UIViewController {
   
   // collectionVeiw 인스턴스 생성
   lazy var collectionView = UICollectionView(
-    frame: view.frame,
+    frame: .zero,
     collectionViewLayout: layout
   )
   
@@ -87,58 +87,80 @@ class ThirdVC: UIViewController {
     //    layout.minimumInteritemSpacing = 15
     layout.itemSize = .init(width: view.frame.width, height: 50)
     
-    // width 값은 가로 스크롤 될 경우 적용됨
-    //    layout.headerReferenceSize = CGSize(width: 60, height: 60)
-    //    layout.footerReferenceSize = CGSize(width: 50, height: 50)
-    
     //    layout.sectionHeadersPinToVisibleBounds = true // 스크롤시 헤더 고정
     //    layout.sectionFootersPinToVisibleBounds = true // 스크롤시 푸터 고정
     return layout
   }()
   
-  //MARK: - Init
+  //MARK: - configure UI
   fileprivate func configureCollectionView() {
     collectionView.dataSource = self
+    collectionView.delegate = self
+    
     collectionView.backgroundColor = .white
     collectionView.register(ThirdCell.self, forCellWithReuseIdentifier: ThirdCell.identifier)
     
     view.addSubview(collectionView)
     
-    setupLongPressGestureRecognizer()
-  }
-  
-  fileprivate func fetchData() {
-    // fetch Data
-    if let viewTitle = viewTitle {
-      todoList = CoreDataManager.shared.fetchKindsTodoList(kinds: viewTitle)
-      print(todoList)
-    }
-  }
-  
-  override func viewDidLoad() {
-    super.viewDidLoad()
+    collectionView.translatesAutoresizingMaskIntoConstraints = false
     
-    view.backgroundColor = .white
+    let guide = view.safeAreaLayoutGuide
+    NSLayoutConstraint.activate([
+      collectionView.topAnchor.constraint(equalTo: guide.topAnchor),
+      collectionView.leadingAnchor.constraint(equalTo: guide.leadingAnchor),
+      collectionView.trailingAnchor.constraint(equalTo: guide.trailingAnchor),
+      collectionView.bottomAnchor.constraint(equalTo: guide.bottomAnchor)
+    ])
     
-    fetchData()
-    
-    textField.delegate = self
-    
-    configureCollectionView()
-    
-  }
-  
-  func setupLongPressGestureRecognizer() {
-    
+    // setupLongPressGuestureRecognizer
     let gesture = UILongPressGestureRecognizer(
       target: self,
       action: #selector(reorderCollectionViewItem(_:))
     )
     collectionView.addGestureRecognizer(gesture)
+  }
+
+  
+  fileprivate func fetchData() {
+    guard let kinds = viewTitle else { return }
+    
+    // fetch Data
+    todoList = CoreDataManager.shared.fetchKindsTodoList(kinds: kinds)
+    
+    // reload data
+    collectionView.reloadData()
+    
+  }
+  
+  
+  fileprivate func configureBasicUI() {
+    let index = (viewTitle == "아침" ? 0 : (viewTitle == "점심" ? 1 : 2))
+    
+    view.backgroundColor = SupportData.titleColor[index]
+    
+    guard let naviController = navigationController else { return }
+    naviController.navigationBar.isHidden = false
+    naviController.navigationBar.prefersLargeTitles = true
+    
+    naviController.navigationBar.barTintColor = SupportData.titleColor[index]
+    naviController.navigationBar.backgroundColor = SupportData.titleColor[index]
+ 
+    navigationItem.rightBarButtonItem = UIBarButtonItem(title: "삭제", style: .plain, target: self, action: #selector(tabDeleteButton))
+  }
+  
+  //MARK: - Init
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    
+    configureBasicUI()
+    
+    configureCollectionView()
     
   }
   
   override func viewWillAppear(_ animated: Bool) {
+    guard let kinds = viewTitle else { return }
+    todoList = CoreDataManager.shared.fetchKindsTodoList(kinds: kinds)
     tabBarController?.tabBar.isHidden = true
   }
   
@@ -148,6 +170,8 @@ class ThirdVC: UIViewController {
       return containerView
     }
   }
+  
+  //MARK: - API
   
   @objc private func reorderCollectionViewItem(_ sender: UILongPressGestureRecognizer) {
     let location = sender.location(in: collectionView)
@@ -165,41 +189,69 @@ class ThirdVC: UIViewController {
     }
   }
   
+  @objc func tabDeleteButton() {
+    guard let kinds = viewTitle else { return }
+    
+    if !deleteIndexPathArray.isEmpty {
+      // indexPath.item수가 큰 이미지부터 제거
+      for indexPath in deleteIndexPathArray.sorted(by:>) {
+        // DB에서 삭제
+        removeTodoItem(indexPath: indexPath)
+        
+        // 이미지 배열에서 제거
+        todoList.remove(at: indexPath.item)
+      }
+      // collection View에서 제거
+      collectionView.deleteItems(at: deleteIndexPathArray)
+    }
+    
+    // fetch Data
+    todoList = CoreDataManager.shared.fetchKindsTodoList(kinds: kinds)
+    
+    // reload data
+    collectionView.reloadData()
+
+    // 삭제를 위한 배열 초기화
+    deleteTodoItemArray = []
+    deleteIndexPathArray = []
+  }
   
   @objc func tabAddButton() {
-    print("add Button")
+    guard let title = textField.text,
+      let kinds = viewTitle else { return }
     
-    if let todoTitle = textField.text,
-      let viewTitle = viewTitle {
-      CoreDataManager.shared.saveUser(index: todoList.count, title: todoTitle, kinds: viewTitle, alramTime: "AM 6", complete: false) { (test) in
-        if !test { print("Error ")}
-      }
-      fetchData()
-      collectionView.reloadData()
-    }
+    // Insert New Data
+    let creationDate = Int(NSDate().timeIntervalSince1970)
+    CoreDataManager.shared.saveTodoItem(createTime: creationDate, title: title, kinds: kinds) {  (onSuccess) in onSuccess ? print("Save Success") : print("Save fail in ThirdVC") }
+    
+    // fetch Data
+    todoList = CoreDataManager.shared.fetchKindsTodoList(kinds: kinds)
+    
+    // reload data
+    collectionView.reloadData()
   }
   
-  
-  func remove(_ index: Int) {
+  func removeTodoItem(indexPath : IndexPath) {
+    
+    guard let cell = collectionView.cellForItem(at: indexPath) as? ThirdCell else { return }
+    guard let createTime = cell.todoItem?.createTime else { return }
 
-      todoList.remove(at: index)
-
-      let indexPath = IndexPath(row: index, section: 0)
-
-      self.collectionView.performBatchUpdates({
-          self.collectionView.deleteItems(at: [indexPath])
-      }) { (finished) in
-          self.collectionView.reloadItems(at: self.collectionView.indexPathsForVisibleItems)
-      }
-
+    CoreDataManager.shared.deleteTodoList(createTime: createTime) { (onSuccess) in
+      onSuccess ? print("delete Success") : print("delete fail in ThirdVC") }
   }
+  
 }
 
-
+//MARK: - TextFieldDelegate
 extension ThirdVC: UITextFieldDelegate {
   override var canBecomeFirstResponder: Bool {
     return true
   }
+  
+  func textFieldDidEndEditing(_ textField: UITextField) {
+    textField.text = nil
+  }
+  
 }
 
 
@@ -207,6 +259,7 @@ extension ThirdVC: UITextFieldDelegate {
 extension ThirdVC: UICollectionViewDataSource, UICollectionViewDelegate {
   
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    
     return todoList.count
   }
   
@@ -214,33 +267,39 @@ extension ThirdVC: UICollectionViewDataSource, UICollectionViewDelegate {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ThirdCell.identifier, for: indexPath) as! ThirdCell
     
     cell.todoItem = todoList[indexPath.item]
-
+    cell.isMultipleTouchEnabled = true
+    cell.isSelected = false
+    
     return cell
   }
   
   func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-    guard sourceIndexPath != destinationIndexPath else { print("Erro"); return }
-    
+    guard sourceIndexPath != destinationIndexPath else { print("Error"); return }
     let destination = destinationIndexPath.item
     let source = sourceIndexPath.item
-    
-    todoList[destination].index = source
-    todoList[source].index = destination
-    
-    print("source \(source), dest :\(destination)")
     
     // 기존 경로 삭제 후 추가
     let elemnet = todoList.remove(at: source)
     todoList.insert(elemnet, at: destination)
     
-    CoreDataManager.shared.changeSaveData() { onSuccess in
-      print("sucess")
+    // 실제 DB 변경
+    CoreDataManager.shared.changeValueMovedItems(todoList: todoList, sourceIndexPath: sourceIndexPath, destinationIndexPath: destinationIndexPath)
+  }
+  
+  func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    guard let cell = collectionView.cellForItem(at: indexPath) else { return }
+    
+    if !deleteIndexPathArray.contains(indexPath) {
+      // 신규 항목 추가
+      deleteIndexPathArray.append(indexPath)
+      cell.backgroundColor = .systemGray4
+    } else {
+      // 중복 항목 제거
+      cell.backgroundColor = .white
+      if let deleteIndex = deleteIndexPathArray.firstIndex(of: indexPath) {
+        deleteIndexPathArray.remove(at: deleteIndex)
+      }
     }
   }
   
-  /*
-  CoreDataManager.shared.deleteUser(id: id) { onSuccess in
-      print("deleted = \(onSuccess)")
-  }
-  */
 }
